@@ -109,7 +109,7 @@ npm install
 Create a `.env` file in the root directory:
 
 ```env
-OMDB_API_KEY=4d0e964
+OMDB_API_KEY=put_your_api_here
 ```
 
 ### 4. Running Locally
@@ -143,8 +143,8 @@ npm start
 > The following section documents the engineered prompts, architectural decisions, and human oversight applied during the engineering and refinement of this platform.
 
 ### 1. Project Overview & Links
-- **GitHub Repository:** [GitHub Repository Link]
-- **Live Deployment:** [Vercel Deployment Link]
+- **GitHub Repository:** https://github.com/kamal-sorour/habka
+- **Live Deployment:** https://habka.vercel.app/
 - **Architecture:** Feature-Sliced Design (FSD) approach.
 - **Tech Stack:** Next.js 16 (App Router), TypeScript, Tailwind CSS, Shadcn UI, Zustand (State Management), Zod (Data Validation), OMDb API.
 
