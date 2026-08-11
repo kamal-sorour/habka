@@ -23,7 +23,7 @@ if (!OMDB_API_KEY) {
 
 export const omdbConfig = {
   /** Base URL for all OMDb requests */
-  baseUrl: "https://www.omdbapi.com",
+  baseUrl: "https://www.omdbapi.com/",
 
   /** Authenticated API key */
   apiKey: OMDB_API_KEY,

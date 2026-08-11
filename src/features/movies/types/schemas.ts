@@ -16,7 +16,7 @@ export const RatingSchema = z.object({
 });
 
 /** The three content types OMDb can return. */
-export const MediaTypeSchema = z.enum(["movie", "series", "episode"]);
+export const MediaTypeSchema = z.string();
 
 // ======================== Search Results (`s=`) ========================= //
 
@@ -31,9 +31,7 @@ export const MovieSearchItemSchema = z.object({
   Year: z.string(),
   imdbID: z.string(),
   Type: MediaTypeSchema,
-  Poster: z
-    .string()
-    .transform((val) => (val === "N/A" ? null : val)),
+  Poster: z.string(),
 });
 
 /** Successful search response (`Response === "True"`). */
