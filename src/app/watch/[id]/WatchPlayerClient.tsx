@@ -13,11 +13,12 @@ import {
   Maximize2,
   Sparkles,
   Server,
-  ShieldCheck,
-  ShieldAlert,
   Play,
   RotateCcw,
-  Volume2,
+  Film,
+  Tv,
+  CheckCircle2,
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFavoritesStore } from "@/store/useFavoritesStore";
@@ -32,7 +33,35 @@ interface WatchPlayerClientProps {
   initialEpisode?: number;
 }
 
-type ServerType = "vidsrc-cc" | "smashystream" | "autoembed" | "vidsrc-xyz" | "trailer";
+type ServerType =
+  | "vidlink"
+  | "embed-su"
+  | "vidsrc-icu"
+  | "vidsrc-cc"
+  | "autoembed"
+  | "smashystream"
+  | "two-embed"
+  | "vidsrc-xyz"
+  | "trailer";
+
+interface ServerConfig {
+  id: ServerType;
+  label: string;
+  badge?: string;
+  description: string;
+}
+
+const STREAMING_SERVERS: ServerConfig[] = [
+  { id: "vidlink", label: "Server 1 (VidLink Pro)", badge: "Fast 1080p", description: "Ultra-fast CDN with multi-language subtitle selector." },
+  { id: "embed-su", label: "Server 2 (Embed.su)", badge: "4K / Ultra", description: "High-bitrate cinema quality stream with low latency." },
+  { id: "vidsrc-icu", label: "Server 3 (VidSrc ICU)", badge: "Multi-Audio", description: "Reliable HD stream with multiple audio track support." },
+  { id: "vidsrc-cc", label: "Server 4 (VidSrc CC)", badge: "HD Clean", description: "Optimized buffer-free streaming server." },
+  { id: "autoembed", label: "Server 5 (AutoEmbed)", badge: "Multi-Sub", description: "Comprehensive multilingual captions and alternate mirrors." },
+  { id: "smashystream", label: "Server 6 (SmashyStream)", badge: "VIP CDN", description: "Multi-player streaming source with automatic failover." },
+  { id: "two-embed", label: "Server 7 (2Embed)", badge: "Fast Mirror", description: "Alternate high-speed mirror for instant playback." },
+  { id: "vidsrc-xyz", label: "Server 8 (VidSrc Global)", badge: "Global", description: "International streaming mirror." },
+  { id: "trailer", label: "Official 4K Trailer", badge: "YouTube", description: "Official 4K YouTube theatrical trailer." },
+];
 
 export function WatchPlayerClient({
   movie,
@@ -43,13 +72,13 @@ export function WatchPlayerClient({
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
   const isFavorite = useFavoritesStore((s) => s.isFavorite(movie.imdbID));
 
-  const [currentServer, setCurrentServer] = useState<ServerType>("vidsrc-cc");
+  const [currentServer, setCurrentServer] = useState<ServerType>("vidlink");
   const [season, setSeason] = useState(initialSeason);
   const [episode, setEpisode] = useState(initialEpisode);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
   const [lightsDimmed, setLightsDimmed] = useState(false);
-  const [adShieldActive, setAdShieldActive] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const isSeries = movie.Type?.toLowerCase() === "series";
 
@@ -61,27 +90,45 @@ export function WatchPlayerClient({
     }
 
     if (isSeries) {
-      if (currentServer === "vidsrc-cc") {
-        return `https://vidsrc.cc/v2/embed/tv/${movie.imdbID}/${season}/${episode}`;
+      switch (currentServer) {
+        case "vidlink":
+          return `https://vidlink.pro/tv/${movie.imdbID}/${season}/${episode}`;
+        case "embed-su":
+          return `https://embed.su/embed/tv/${movie.imdbID}/${season}/${episode}`;
+        case "vidsrc-icu":
+          return `https://vidsrc.icu/embed/tv/${movie.imdbID}/${season}/${episode}`;
+        case "vidsrc-cc":
+          return `https://vidsrc.cc/v2/embed/tv/${movie.imdbID}/${season}/${episode}`;
+        case "autoembed":
+          return `https://autoembed.co/tv/imdb/${movie.imdbID}-${season}-${episode}`;
+        case "smashystream":
+          return `https://player.smashy.stream/tv/${movie.imdbID}?s=${season}&e=${episode}`;
+        case "two-embed":
+          return `https://www.2embed.cc/embedtv/${movie.imdbID}&s=${season}&e=${episode}`;
+        case "vidsrc-xyz":
+        default:
+          return `https://vidsrc.xyz/embed/tv/${movie.imdbID}/${season}-${episode}`;
       }
-      if (currentServer === "smashystream") {
-        return `https://player.smashy.stream/tv/${movie.imdbID}?s=${season}&e=${episode}`;
-      }
-      if (currentServer === "autoembed") {
-        return `https://autoembed.co/tv/imdb/${movie.imdbID}-${season}-${episode}`;
-      }
-      return `https://vidsrc.xyz/embed/tv/${movie.imdbID}/${season}-${episode}`;
     } else {
-      if (currentServer === "vidsrc-cc") {
-        return `https://vidsrc.cc/v2/embed/movie/${movie.imdbID}`;
+      switch (currentServer) {
+        case "vidlink":
+          return `https://vidlink.pro/movie/${movie.imdbID}`;
+        case "embed-su":
+          return `https://embed.su/embed/movie/${movie.imdbID}`;
+        case "vidsrc-icu":
+          return `https://vidsrc.icu/embed/movie/${movie.imdbID}`;
+        case "vidsrc-cc":
+          return `https://vidsrc.cc/v2/embed/movie/${movie.imdbID}`;
+        case "autoembed":
+          return `https://autoembed.co/movie/imdb/${movie.imdbID}`;
+        case "smashystream":
+          return `https://player.smashy.stream/movie/${movie.imdbID}`;
+        case "two-embed":
+          return `https://www.2embed.cc/embed/${movie.imdbID}`;
+        case "vidsrc-xyz":
+        default:
+          return `https://vidsrc.xyz/embed/movie/${movie.imdbID}`;
       }
-      if (currentServer === "smashystream") {
-        return `https://player.smashy.stream/movie/${movie.imdbID}`;
-      }
-      if (currentServer === "autoembed") {
-        return `https://autoembed.co/movie/imdb/${movie.imdbID}`;
-      }
-      return `https://vidsrc.xyz/embed/movie/${movie.imdbID}`;
     }
   };
 
@@ -93,10 +140,16 @@ export function WatchPlayerClient({
     }
   };
 
+  const handleReloadPlayer = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
+
   const castList =
     movie.Actors && movie.Actors !== "N/A"
       ? movie.Actors.split(",").map((a) => a.trim())
       : [];
+
+  const activeServerInfo = STREAMING_SERVERS.find((s) => s.id === currentServer);
 
   return (
     <div
@@ -161,28 +214,14 @@ export function WatchPlayerClient({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Ad-Blocker Sandbox Shield Indicator / Toggle */}
+            {/* Reload Player Button */}
             <button
-              onClick={() => setAdShieldActive(!adShieldActive)}
-              title={
-                adShieldActive
-                  ? "Ad & Popup Shield is Active (Click to toggle)"
-                  : "Ad Shield Disabled"
-              }
-              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold backdrop-blur-xl transition-all ${
-                adShieldActive
-                  ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
-                  : "border-amber-500/40 bg-amber-500/15 text-amber-400"
-              }`}
+              onClick={handleReloadPlayer}
+              title="Reload video stream"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-muted-foreground backdrop-blur-xl transition-all hover:bg-white/[0.08] hover:text-white"
             >
-              {adShieldActive ? (
-                <ShieldCheck className="size-3.5" />
-              ) : (
-                <ShieldAlert className="size-3.5" />
-              )}
-              <span className="hidden sm:inline">
-                {adShieldActive ? "Ad-Shield ON" : "Ad-Shield OFF"}
-              </span>
+              <RotateCcw className="size-3.5" />
+              <span className="hidden sm:inline">Refresh</span>
             </button>
 
             {/* Lights Dim Toggle */}
@@ -253,7 +292,7 @@ export function WatchPlayerClient({
           </div>
         </div>
 
-        {/* ── Apple Vision Player Stage with Ad-Shield Sandbox ── */}
+        {/* ── Apple Vision Player Stage (Unrestricted Iframe for Instant Playback) ── */}
         <div
           className={`relative z-30 mt-2 overflow-hidden rounded-3xl border border-white/10 bg-black shadow-[0_20px_70px_rgba(0,0,0,0.95)] ${
             isTheaterMode
@@ -261,110 +300,118 @@ export function WatchPlayerClient({
               : "aspect-video min-h-[320px] sm:min-h-[480px]"
           }`}
         >
-          {/* Iframe Stream Protected with Strict Sandbox Against Ads & Popups */}
           <iframe
-            key={`${currentServer}-${season}-${episode}-${adShieldActive}`}
+            key={`${currentServer}-${season}-${episode}-${refreshKey}`}
             src={getEmbedUrl()}
             className="h-full w-full border-0 bg-black"
             allowFullScreen
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            sandbox={
-              adShieldActive
-                ? "allow-scripts allow-same-origin allow-presentation allow-forms"
-                : "allow-scripts allow-same-origin allow-presentation allow-forms allow-popups"
-            }
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             title={`${movie.Title} Video Stream`}
           />
         </div>
 
-        {/* ── Ad-Shield Info Notification ── */}
-        <div className="relative z-30 mt-2 flex items-center justify-between px-2 text-[11px] text-muted-foreground">
-          <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-            <ShieldCheck className="size-3.5" />
-            <span>
-              Ad & Popup Blocker Sandbox:{" "}
-              {adShieldActive
-                ? "Active (Intrusive popups & redirect ads blocked)"
-                : "Standard mode"}
+        {/* ── Active Server Status & Instructions ── */}
+        <div className="relative z-30 mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="size-4 text-emerald-400 shrink-0" />
+            <span className="text-white/90">
+              Active: <strong className="text-amber">{activeServerInfo?.label}</strong> —{" "}
+              <span className="text-muted-foreground">{activeServerInfo?.description}</span>
             </span>
           </div>
-          <span className="hidden sm:inline text-white/40">
-            Switch servers below if any stream buffers
-          </span>
+          <div className="text-[11px] text-white/50 flex items-center gap-1">
+            <Info className="size-3 text-amber" />
+            <span>إذا واجهت بطء أو توقف، جرب التبديل لأي سيرفر آخر من القائمة بالأسفل</span>
+          </div>
         </div>
 
-        {/* ── Streaming Server Switcher Bar ── */}
-        <div className="relative z-30 mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3.5 backdrop-blur-2xl">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground/80 mr-2">
-              <Server className="size-3.5 text-amber" />
-              Stream Source:
-            </span>
+        {/* ── Expanded Multi-Server Switcher Bar ── */}
+        <div className="relative z-30 mt-4 space-y-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-2xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white">
+              <Server className="size-4 text-amber" />
+              <span>Available Streaming Servers ({STREAMING_SERVERS.length} Sources):</span>
+            </div>
 
-            {[
-              { id: "vidsrc-cc", label: "Server 1 (Clean HD)" },
-              { id: "smashystream", label: "Server 2 (Ad-Filtered)" },
-              { id: "autoembed", label: "Server 3 (Multi-Sub)" },
-              { id: "vidsrc-xyz", label: "Server 4 (Alternative)" },
-              { id: "trailer", label: "Official 4K Trailer" },
-            ].map((server) => (
-              <button
-                key={server.id}
-                type="button"
-                onClick={() => setCurrentServer(server.id as ServerType)}
-                className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all ${
-                  currentServer === server.id
-                    ? "bg-gradient-to-r from-amber-400 to-amber-500 text-black font-bold shadow-lg shadow-amber-500/20"
-                    : "border border-white/5 bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08] hover:text-white"
-                }`}
-              >
-                {server.label}
-              </button>
-            ))}
+            {/* Series Season & Episode Picker */}
+            {isSeries && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1 text-xs">
+                  <span className="text-muted-foreground">Season:</span>
+                  <select
+                    value={season}
+                    onChange={(e) => setSeason(Number(e.target.value))}
+                    className="bg-transparent font-bold text-white outline-none cursor-pointer"
+                  >
+                    {Array.from({ length: 20 }, (_, i) => i + 1).map((s) => (
+                      <option
+                        key={s}
+                        value={s}
+                        className="bg-zinc-900 text-white"
+                      >
+                        Season {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1 text-xs">
+                  <span className="text-muted-foreground">Episode:</span>
+                  <select
+                    value={episode}
+                    onChange={(e) => setEpisode(Number(e.target.value))}
+                    className="bg-transparent font-bold text-white outline-none cursor-pointer"
+                  >
+                    {Array.from({ length: 40 }, (_, i) => i + 1).map((ep) => (
+                      <option
+                        key={ep}
+                        value={ep}
+                        className="bg-zinc-900 text-white"
+                      >
+                        Episode {ep}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Series Episode Picker */}
-          {isSeries && (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1 text-xs">
-                <span className="text-muted-foreground">Season:</span>
-                <select
-                  value={season}
-                  onChange={(e) => setSeason(Number(e.target.value))}
-                  className="bg-transparent font-bold text-white outline-none cursor-pointer"
+          {/* Grid of Streaming Server Buttons */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 pt-1">
+            {STREAMING_SERVERS.map((server) => {
+              const isActive = currentServer === server.id;
+              return (
+                <button
+                  key={server.id}
+                  type="button"
+                  onClick={() => setCurrentServer(server.id)}
+                  className={`flex flex-col items-start rounded-xl p-2.5 text-left transition-all ${
+                    isActive
+                      ? "bg-gradient-to-r from-amber-400 to-amber-500 text-black font-bold shadow-lg shadow-amber-500/20 scale-[1.02]"
+                      : "border border-white/5 bg-white/[0.04] text-muted-foreground hover:bg-white/[0.08] hover:text-white"
+                  }`}
                 >
-                  {Array.from({ length: 15 }, (_, i) => i + 1).map((s) => (
-                    <option
-                      key={s}
-                      value={s}
-                      className="bg-zinc-900 text-white"
+                  <div className="flex w-full items-center justify-between gap-1">
+                    <span className={`text-xs font-bold line-clamp-1 ${isActive ? "text-black" : "text-white"}`}>
+                      {server.label}
+                    </span>
+                  </div>
+                  {server.badge && (
+                    <span
+                      className={`mt-1 rounded-md px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider ${
+                        isActive
+                          ? "bg-black/20 text-black"
+                          : "bg-white/10 text-amber"
+                      }`}
                     >
-                      Season {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1 text-xs">
-                <span className="text-muted-foreground">Episode:</span>
-                <select
-                  value={episode}
-                  onChange={(e) => setEpisode(Number(e.target.value))}
-                  className="bg-transparent font-bold text-white outline-none cursor-pointer"
-                >
-                  {Array.from({ length: 30 }, (_, i) => i + 1).map((ep) => (
-                    <option
-                      key={ep}
-                      value={ep}
-                      className="bg-zinc-900 text-white"
-                    >
-                      Episode {ep}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
+                      {server.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* ── Movie Information Under Player ── */}
